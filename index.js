@@ -30,12 +30,20 @@ async function run() {
         // Connect the client to the server	(optional starting in v4.7)
         // await client.connect();
         const usersCollection = client.db('restaurant').collection('users');
+        const foodsCollection = client.db('restaurant').collection('foods');
 
 
         app.post('/users', async (req, res) => {
             const user = req.body;
             console.log(user)
             const result  = await usersCollection.insertOne(user);
+            res.send(result)
+        })
+
+        app.post('/foods', async (req, res) => {
+            const user = req.body;
+            console.log(user)
+            const result  = await foodsCollection.insertOne(user);
             res.send(result)
         })
 
