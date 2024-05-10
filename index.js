@@ -33,6 +33,14 @@ async function run() {
         const foodsCollection = client.db('restaurant').collection('foods');
 
 
+        app.get('/foods/:email' ,async(req ,res)=>{
+            const email= req.params.email;
+            const query= {email : email}
+            const result = await foodsCollection.find(query).toArray();
+            res.send(result)
+        })
+
+
         app.post('/users', async (req, res) => {
             const user = req.body;
             console.log(user)
