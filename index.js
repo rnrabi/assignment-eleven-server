@@ -61,6 +61,13 @@ async function run() {
             res.send(result)
         })
 
+        app.get('/myPurchase/:email', async(req , res)=>{
+            const email = req.params.email;
+            const query = {email:email}
+            const result = await purchaseCollection.find(query).toArray();
+            res.send(result)
+        })
+
         app.put('/update/:id' , async(req, res)=>{
             const id = req.params.id;
             const info = req.body;
@@ -107,12 +114,19 @@ async function run() {
             res.send(result)
 
         })
-        
+
 
         app.delete('/foods-delete/:id' , async(req , res)=>{
             const id = req.params.id;
             const query = {_id:new ObjectId(id)};
             const result = await foodsCollection.deleteOne(query);
+            res.send(result)
+        })
+
+        app.delete('/purchase/:id' , async(req , res)=>{
+            const id = req.params.id;
+            const query = {_id:new ObjectId(id)};
+            const result = await purchaseCollection.deleteOne(query);
             res.send(result)
         })
 
