@@ -47,6 +47,30 @@ async function run() {
             res.send(result)
         })
 
+        app.put('/update/:id' , async(req, res)=>{
+            const id = req.params.id;
+            const info = req.body;
+            console.log(info)
+            const filter= {_id: new ObjectId(id)};
+            const options = { upsert: true };
+            const updateDoc = {
+                $set: {
+                    name :info.name,
+                    imageURL:info.imageURL,
+                    category :info.category,
+                    quantity:info.quantity,
+                    price:info.price,
+                    addBy:info.addBy,
+                    origin:info.origin,
+                    textarea:info.textarea
+                },
+              };
+
+
+            const result = await foodsCollection.updateOne(filter , updateDoc , options);
+            res.send(result)
+        })
+
 
         app.post('/users', async (req, res) => {
             const user = req.body;
