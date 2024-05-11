@@ -31,6 +31,7 @@ async function run() {
         // await client.connect();
         const usersCollection = client.db('restaurant').collection('users');
         const foodsCollection = client.db('restaurant').collection('foods');
+        const purchaseCollection = client.db('restaurant').collection('purchase');
 
 
 
@@ -98,6 +99,15 @@ async function run() {
             const result  = await foodsCollection.insertOne(user);
             res.send(result)
         })
+
+        app.post('/purchase' , async(req , res)=>{
+            const purchaseData = req.body;
+            console.log(purchaseData);
+            const result = await purchaseCollection.insertOne(purchaseData);
+            res.send(result)
+
+        })
+        
 
         app.delete('/foods-delete/:id' , async(req , res)=>{
             const id = req.params.id;
