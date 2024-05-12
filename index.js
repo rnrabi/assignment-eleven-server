@@ -36,7 +36,15 @@ async function run() {
 
 
         app.get('/foods', async (req, res) => {
-            const result = await foodsCollection.find().toArray();
+            const searchText = req.query.search;
+            console.log(searchText)
+            let query = {};
+
+            if(searchText){
+                query ={name: {$regex:searchText , $options:'i'}}
+            };
+
+            const result = await foodsCollection.find(query).toArray();
             res.send(result)
         })
 
