@@ -68,6 +68,12 @@ async function run() {
             res.send(result)
         })
 
+        app.get('/topFoods', async(req , res)=>{
+            const sort = {purchase:-1}
+            const result = await foodsCollection.find().sort(sort).limit(6).toArray();
+            res.send(result)
+        })
+
         app.put('/update/:id', async (req, res) => {
             const id = req.params.id;
             const info = req.body;
