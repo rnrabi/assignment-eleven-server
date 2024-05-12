@@ -35,60 +35,60 @@ async function run() {
 
 
 
-        app.get('/foods', async(req, res)=>{
+        app.get('/foods', async (req, res) => {
             const result = await foodsCollection.find().toArray();
             res.send(result)
         })
 
-        app.get('/foods/:email' ,async(req ,res)=>{
-            const email= req.params.email;
-            const query= {email : email}
+        app.get('/foods/:email', async (req, res) => {
+            const email = req.params.email;
+            const query = { email: email }
             const result = await foodsCollection.find(query).toArray();
             res.send(result)
         })
 
-        app.get('/update/:id' , async(req, res)=>{
+        app.get('/update/:id', async (req, res) => {
             const id = req.params.id;
-            const query= {_id: new ObjectId(id)};
+            const query = { _id: new ObjectId(id) };
             const result = await foodsCollection.findOne(query);
             res.send(result)
         })
 
-        app.get('/detail/:id' , async(req, res)=>{
+        app.get('/detail/:id', async (req, res) => {
             const id = req.params.id;
-            const query= {_id: new ObjectId(id)};
+            const query = { _id: new ObjectId(id) };
             const result = await foodsCollection.findOne(query);
             res.send(result)
         })
 
-        app.get('/myPurchase/:email', async(req , res)=>{
+        app.get('/myPurchase/:email', async (req, res) => {
             const email = req.params.email;
-            const query = {email:email}
+            const query = { email: email }
             const result = await purchaseCollection.find(query).toArray();
             res.send(result)
         })
 
-        app.put('/update/:id' , async(req, res)=>{
+        app.put('/update/:id', async (req, res) => {
             const id = req.params.id;
             const info = req.body;
             console.log(info)
-            const filter= {_id: new ObjectId(id)};
+            const filter = { _id: new ObjectId(id) };
             const options = { upsert: true };
             const updateDoc = {
                 $set: {
-                    name :info.name,
-                    imageURL:info.imageURL,
-                    category :info.category,
-                    quantity:info.quantity,
-                    price:info.price,
-                    addBy:info.addBy,
-                    origin:info.origin,
-                    textarea:info.textarea
+                    name: info.name,
+                    imageURL: info.imageURL,
+                    category: info.category,
+                    quantity: info.quantity,
+                    price: info.price,
+                    addBy: info.addBy,
+                    origin: info.origin,
+                    textarea: info.textarea
                 },
-              };
+            };
 
 
-            const result = await foodsCollection.updateOne(filter , updateDoc , options);
+            const result = await foodsCollection.updateOne(filter, updateDoc, options);
             res.send(result)
         })
 
@@ -96,36 +96,43 @@ async function run() {
         app.post('/users', async (req, res) => {
             const user = req.body;
             console.log(user)
-            const result  = await usersCollection.insertOne(user);
+            const result = await usersCollection.insertOne(user);
             res.send(result)
         })
 
         app.post('/foods', async (req, res) => {
             const user = req.body;
             console.log(user)
-            const result  = await foodsCollection.insertOne(user);
+            const result = await foodsCollection.insertOne(user);
             res.send(result)
         })
 
-        app.post('/purchase' , async(req , res)=>{
+        app.post('/purchase', async (req, res) => {
             const purchaseData = req.body;
-            console.log(purchaseData);
+            const purchaseId = purchaseData.id;
+            console.log(purchaseData , purchaseId);
             const result = await purchaseCollection.insertOne(purchaseData);
+            const filter = { _id: new ObjectId(purchaseId) }
+            const options = { upsert: true }
+            const doc = {
+                $inc: { purchase: 1 }
+            }
+            const updateFoodsCollection = await foodsCollection.updateOne(filter, doc, options)
             res.send(result)
 
         })
 
 
-        app.delete('/foods-delete/:id' , async(req , res)=>{
+        app.delete('/foods-delete/:id', async (req, res) => {
             const id = req.params.id;
-            const query = {_id:new ObjectId(id)};
+            const query = { _id: new ObjectId(id) };
             const result = await foodsCollection.deleteOne(query);
             res.send(result)
         })
 
-        app.delete('/purchase/:id' , async(req , res)=>{
+        app.delete('/purchase/:id', async (req, res) => {
             const id = req.params.id;
-            const query = {_id:new ObjectId(id)};
+            const query = { _id: new ObjectId(id) };
             const result = await purchaseCollection.deleteOne(query);
             res.send(result)
         })
