@@ -32,6 +32,7 @@ async function run() {
         const usersCollection = client.db('restaurant').collection('users');
         const foodsCollection = client.db('restaurant').collection('foods');
         const purchaseCollection = client.db('restaurant').collection('purchase');
+        // const feedbackCollection = client.db('restaurant').collection('feedback');
 
 
 
@@ -50,7 +51,7 @@ async function run() {
 
         app.get('/foods/:email', async (req, res) => {
             const email = req.params.email;
-            const query = { email: email }
+            const query = { 'addBy.email': email }
             const result = await foodsCollection.find(query).toArray();
             res.send(result)
         })
@@ -129,7 +130,7 @@ async function run() {
             const filter = { _id: new ObjectId(purchaseId) }
             const options = { upsert: true }
             const doc = {
-                $inc: { purchase: 1 }
+                $inc: { purchase: 1 , quantity:-1 }
             }
             const updateFoodsCollection = await foodsCollection.updateOne(filter, doc, options)
             res.send(result)
