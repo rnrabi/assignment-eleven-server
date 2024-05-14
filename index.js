@@ -59,7 +59,7 @@ async function run() {
         const usersCollection = client.db('restaurant').collection('users');
         const foodsCollection = client.db('restaurant').collection('foods');
         const purchaseCollection = client.db('restaurant').collection('purchase');
-        // const feedbackCollection = client.db('restaurant').collection('feedback');
+        const serviceCollection = client.db('restaurant').collection('service');
 
         // create jwt token
         app.post('/jwt', async (req, res) => {
@@ -107,10 +107,10 @@ async function run() {
             res.send(result)
         })
 
-        // app.get('/foodServices', async (req, res) => {
-        //     const result = await foodsCollection.find().toArray();
-        //     res.send(result)
-        // })
+        app.get('/services', async (req, res) => {
+            const result = await serviceCollection.find().toArray();
+            res.send(result)
+        })
 
         app.get('/foods/:email', verifyToken, async (req, res) => {
             const email = req.params.email;
@@ -131,7 +131,7 @@ async function run() {
             res.send(result)
         })
 
-        app.get('/detail/:id', verifyToken, async (req, res) => {
+        app.get('/detail/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) };
             const result = await foodsCollection.findOne(query);
@@ -196,10 +196,33 @@ async function run() {
 
         app.post('/foods', async (req, res) => {
             const user = req.body;
-            // console.log(user)
+            const servicer = req.body.addBy;
+            const query = { 'addBy.email': servicer.email }
+            const existingEmail = await serviceCollection.findOne(query);
+            if (!existingEmail) {
+                const resultOne = await serviceCollection.insertOne(servicer);
+                res.send(resultOne);
+            }
+            // console.log(user.addBy)
             const result = await foodsCollection.insertOne(user);
+
             res.send(result)
         })
+
+        app.post('/service', async (req, res) => {
+            const user = req.body;
+            const servicer = req.body.addBy;
+            const query = { 'addBy.email': servicer.email }
+            const existingEmail = await serviceCollection.findOne(query);
+            if (!existingEmail) {
+                const resultOne = await serviceCollection.insertOne(servicer);
+                res.send(resultOne);
+            }
+            res.send('servicer all ready exist')
+            // console.log(user.addBy)
+            
+        })
+
 
         app.post('/purchase', async (req, res) => {
             const purchaseData = req.body;
