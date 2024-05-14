@@ -10,10 +10,32 @@ const port = process.env.PORT || 5000;
 // middlewere
 app.use(cors({
     origin: ['http://localhost:5173'],
-    credentials: true
+    credentials: true,
+    optionSuccessStatus: 200
 }))
 app.use(express.json())
 app.use(cookieParser())
+// verify token
+const verifyToken = async (req, res, next) => {
+    const token = req.cookies?.token;
+    if (!token) {
+        return res.status(401).send({ message: 'unauthorize access' })
+    }
+    
+        jwt.verify(token, process.env.VITE_JWT_secrete, (err, decoded) => {
+            if (err) {
+                console.log(err)
+                return res.status(401).send({ message: 'unauthorize access' })
+            }
+            console.log(decoded)
+            req.user = decoded;
+            next()
+        })
+   
+    console.log(token)
+
+
+}
 
 
 // mongodb code here 
@@ -43,13 +65,13 @@ async function run() {
         app.post('/jwt', async (req, res) => {
             const paylod = req.body;
             console.log(paylod)
-           const token =  jwt.sign(paylod , process.env.VITE_JWT_secrete , {expiresIn: '1d'})
-            res.cookie('token' , token , {
+            const token = jwt.sign(paylod, process.env.VITE_JWT_secrete, { expiresIn: '1d' })
+            res.cookie('token', token, {
                 httpOnly: true,
                 secure: process.env.NODE_ENV === 'production',
                 sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
             })
-            .send({success:true})
+                .send({ success: true })
         })
 
 
@@ -62,7 +84,7 @@ async function run() {
 
         app.get('/foods', async (req, res) => {
             const searchText = req.query.search;
-            console.log(searchText)
+            // console.log(searchText)
             let query = {};
 
             if (searchText) {
@@ -78,8 +100,13 @@ async function run() {
         //     res.send(result)
         // })
 
-        app.get('/foods/:email', async (req, res) => {
+        app.get('/foods/:email', verifyToken , async (req, res) => {
             const email = req.params.email;
+            const tokenEmail = req.user.email;
+            // console.log('food token email',tokenEmail)
+            if(tokenEmail !== email){
+              return  res.status(403).send({message:'forbidden access'})
+            }
             const query = { 'addBy.email': email }
             const result = await foodsCollection.find(query).toArray();
             res.send(result)
@@ -92,15 +119,20 @@ async function run() {
             res.send(result)
         })
 
-        app.get('/detail/:id', async (req, res) => {
+        app.get('/detail/:id', verifyToken , async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) };
             const result = await foodsCollection.findOne(query);
             res.send(result)
         })
 
-        app.get('/myPurchase/:email', async (req, res) => {
+        app.get('/myPurchase/:email',verifyToken , async (req, res) => {
             const email = req.params.email;
+            const tokenEmail = req.user.email;
+            // console.log('token email',tokenEmail)
+            if(tokenEmail !== email){
+              return  res.status(403).send({message:'forbidden access'})
+            }
             const query = { email: email }
             const result = await purchaseCollection.find(query).toArray();
             res.send(result)
@@ -115,7 +147,7 @@ async function run() {
         app.put('/update/:id', async (req, res) => {
             const id = req.params.id;
             const info = req.body;
-            console.log(info)
+            // console.log(info)
             const filter = { _id: new ObjectId(id) };
             const options = { upsert: true };
             const updateDoc = {
@@ -139,7 +171,7 @@ async function run() {
 
         app.post('/users', async (req, res) => {
             const user = req.body;
-            console.log(user)
+            // console.log(user)
             const query = { email: user.email }
             const existingEmail = await usersCollection.findOne(query);
             if (!existingEmail) {
@@ -152,7 +184,7 @@ async function run() {
 
         app.post('/foods', async (req, res) => {
             const user = req.body;
-            console.log(user)
+            // console.log(user)
             const result = await foodsCollection.insertOne(user);
             res.send(result)
         })
@@ -160,7 +192,7 @@ async function run() {
         app.post('/purchase', async (req, res) => {
             const purchaseData = req.body;
             const purchaseId = purchaseData.id;
-            console.log(purchaseData, purchaseId);
+            // console.log(purchaseData, purchaseId);
             const result = await purchaseCollection.insertOne(purchaseData);
             const filter = { _id: new ObjectId(purchaseId) }
             const options = { upsert: true }
