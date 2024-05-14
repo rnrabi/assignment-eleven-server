@@ -37,6 +37,11 @@ async function run() {
         // const feedbackCollection = client.db('restaurant').collection('feedback');
 
 
+        app.get('/users' , async(req, res)=>{
+            const result = await usersCollection.find().toArray();
+            res.send(result)
+        })
+
 
         app.get('/foods', async (req, res) => {
             const searchText = req.query.search;
@@ -113,8 +118,14 @@ async function run() {
         app.post('/users', async (req, res) => {
             const user = req.body;
             console.log(user)
-            const result = await usersCollection.insertOne(user);
-            res.send(result)
+            const query = {email:user.email}
+            const existingEmail = await usersCollection.findOne(query);
+            if(!existingEmail){
+                const result = await usersCollection.insertOne(user);
+                res.send(result)
+            }
+            res.send('user already exist')
+           
         })
 
         app.post('/foods', async (req, res) => {
