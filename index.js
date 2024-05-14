@@ -16,22 +16,22 @@ app.use(cors({
 app.use(express.json())
 app.use(cookieParser())
 // verify token
-const verifyToken = async (req, res, next) => {
+const verifyToken = (req, res, next) => {
     const token = req.cookies?.token;
     if (!token) {
         return res.status(401).send({ message: 'unauthorize access' })
     }
-    
-        jwt.verify(token, process.env.VITE_JWT_secrete, (err, decoded) => {
-            if (err) {
-                console.log(err)
-                return res.status(401).send({ message: 'unauthorize access' })
-            }
-            console.log(decoded)
-            req.user = decoded;
-            next()
-        })
-   
+
+    jwt.verify(token, process.env.VITE_JWT_secrete, (err, decoded) => {
+        if (err) {
+            console.log(err)
+            return res.status(401).send({ message: 'unauthorize access' })
+        }
+        console.log(decoded)
+        req.user = decoded;
+        next()
+    })
+
     console.log(token)
 
 
@@ -74,6 +74,18 @@ async function run() {
                 .send({ success: true })
         })
 
+        // Token clear form clicking on logout
+        app.post('/logout', (req, res) => {
+            res
+                .clearCookie('token', {
+                    httpOnly: true,
+                    secure: process.env.NODE_ENV === 'production',
+                    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
+                    maxAge: 0,
+                })
+                .send({ success: true })
+        })
+
 
 
         app.get('/users', async (req, res) => {
@@ -100,12 +112,12 @@ async function run() {
         //     res.send(result)
         // })
 
-        app.get('/foods/:email', verifyToken , async (req, res) => {
+        app.get('/foods/:email', verifyToken, async (req, res) => {
             const email = req.params.email;
             const tokenEmail = req.user.email;
             // console.log('food token email',tokenEmail)
-            if(tokenEmail !== email){
-              return  res.status(403).send({message:'forbidden access'})
+            if (tokenEmail !== email) {
+                return res.status(403).send({ message: 'forbidden access' })
             }
             const query = { 'addBy.email': email }
             const result = await foodsCollection.find(query).toArray();
@@ -119,19 +131,19 @@ async function run() {
             res.send(result)
         })
 
-        app.get('/detail/:id', verifyToken , async (req, res) => {
+        app.get('/detail/:id', verifyToken, async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) };
             const result = await foodsCollection.findOne(query);
             res.send(result)
         })
 
-        app.get('/myPurchase/:email',verifyToken , async (req, res) => {
+        app.get('/myPurchase/:email', verifyToken, async (req, res) => {
             const email = req.params.email;
             const tokenEmail = req.user.email;
             // console.log('token email',tokenEmail)
-            if(tokenEmail !== email){
-              return  res.status(403).send({message:'forbidden access'})
+            if (tokenEmail !== email) {
+                return res.status(403).send({ message: 'forbidden access' })
             }
             const query = { email: email }
             const result = await purchaseCollection.find(query).toArray();
