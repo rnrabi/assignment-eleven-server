@@ -1,6 +1,8 @@
 const express = require('express');
 const cors = require('cors');
-require('dotenv').config()
+require('dotenv').config();
+const jwt = require('jsonwebtoken');
+const cookieParser = require('cookie-parser');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const app = express()
 const port = process.env.PORT || 5000;
@@ -11,6 +13,7 @@ app.use(cors({
     credentials: true
 }))
 app.use(express.json())
+app.use(cookieParser())
 
 
 // mongodb code here 
@@ -36,8 +39,22 @@ async function run() {
         const purchaseCollection = client.db('restaurant').collection('purchase');
         // const feedbackCollection = client.db('restaurant').collection('feedback');
 
+        // create jwt token
+        app.post('/jwt', async (req, res) => {
+            const paylod = req.body;
+            console.log(paylod)
+           const token =  jwt.sign(paylod , process.env.VITE_JWT_secrete , {expiresIn: '1d'})
+            res.cookie('token' , token , {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
+            })
+            .send({success:true})
+        })
 
-        app.get('/users' , async(req, res)=>{
+
+
+        app.get('/users', async (req, res) => {
             const result = await usersCollection.find().toArray();
             res.send(result)
         })
@@ -48,13 +65,18 @@ async function run() {
             console.log(searchText)
             let query = {};
 
-            if(searchText){
-                query ={name: {$regex:searchText , $options:'i'}}
+            if (searchText) {
+                query = { name: { $regex: searchText, $options: 'i' } }
             };
 
             const result = await foodsCollection.find(query).toArray();
             res.send(result)
         })
+
+        // app.get('/foodServices', async (req, res) => {
+        //     const result = await foodsCollection.find().toArray();
+        //     res.send(result)
+        // })
 
         app.get('/foods/:email', async (req, res) => {
             const email = req.params.email;
@@ -84,8 +106,8 @@ async function run() {
             res.send(result)
         })
 
-        app.get('/topFoods', async(req , res)=>{
-            const sort = {purchase:-1}
+        app.get('/topFoods', async (req, res) => {
+            const sort = { purchase: -1 }
             const result = await foodsCollection.find().sort(sort).limit(6).toArray();
             res.send(result)
         })
@@ -118,14 +140,14 @@ async function run() {
         app.post('/users', async (req, res) => {
             const user = req.body;
             console.log(user)
-            const query = {email:user.email}
+            const query = { email: user.email }
             const existingEmail = await usersCollection.findOne(query);
-            if(!existingEmail){
+            if (!existingEmail) {
                 const result = await usersCollection.insertOne(user);
                 res.send(result)
             }
             res.send('user already exist')
-           
+
         })
 
         app.post('/foods', async (req, res) => {
@@ -138,12 +160,12 @@ async function run() {
         app.post('/purchase', async (req, res) => {
             const purchaseData = req.body;
             const purchaseId = purchaseData.id;
-            console.log(purchaseData , purchaseId);
+            console.log(purchaseData, purchaseId);
             const result = await purchaseCollection.insertOne(purchaseData);
             const filter = { _id: new ObjectId(purchaseId) }
             const options = { upsert: true }
             const doc = {
-                $inc: { purchase: 1 , quantity:-1 }
+                $inc: { purchase: 1, quantity: -1 }
             }
             const updateFoodsCollection = await foodsCollection.updateOne(filter, doc, options)
             res.send(result)
