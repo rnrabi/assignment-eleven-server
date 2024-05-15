@@ -9,7 +9,7 @@ const port = process.env.PORT || 5000;
 
 // middlewere
 app.use(cors({
-    origin: ['http://localhost:5173'],
+    origin: ['http://localhost:5173','https://assignment-eleven-51b91.web.app','https://assignment-eleven-51b91.firebaseapp.com'],
     credentials: true,
     optionSuccessStatus: 200
 }))
@@ -27,12 +27,12 @@ const verifyToken = (req, res, next) => {
             console.log(err)
             return res.status(401).send({ message: 'unauthorize access' })
         }
-        console.log(decoded)
+        // console.log(decoded)
         req.user = decoded;
         next()
     })
 
-    console.log(token)
+    // console.log(token)
 
 
 }
@@ -64,7 +64,7 @@ async function run() {
         // create jwt token
         app.post('/jwt', async (req, res) => {
             const paylod = req.body;
-            console.log(paylod)
+            // console.log(paylod)
             const token = jwt.sign(paylod, process.env.VITE_JWT_secrete, { expiresIn: '1d' })
             res.cookie('token', token, {
                 httpOnly: true,
@@ -76,14 +76,15 @@ async function run() {
 
         // Token clear form clicking on logout
         app.post('/logout', (req, res) => {
-            res
-                .clearCookie('token', {
-                    httpOnly: true,
-                    secure: process.env.NODE_ENV === 'production',
-                    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
-                    maxAge: 0,
-                })
-                .send({ success: true })
+            // res
+            //     .clearCookie('token', {
+            //         httpOnly: true,
+            //         secure: process.env.NODE_ENV === 'production',
+            //         sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
+            //         maxAge: 0,
+            //     })
+            //     .send({ success: true })
+            res.clearCookie('token', {maxAge:0,sameSite:"none",secure:true}).send({success:true})
         })
 
 
@@ -141,7 +142,6 @@ async function run() {
         app.get('/myPurchase/:email', verifyToken, async (req, res) => {
             const email = req.params.email;
             const tokenEmail = req.user.email;
-            // console.log('token email',tokenEmail)
             if (tokenEmail !== email) {
                 return res.status(403).send({ message: 'forbidden access' })
             }
@@ -159,7 +159,6 @@ async function run() {
         app.put('/update/:id', async (req, res) => {
             const id = req.params.id;
             const info = req.body;
-            // console.log(info)
             const filter = { _id: new ObjectId(id) };
             const options = { upsert: true };
             const updateDoc = {
@@ -190,18 +189,18 @@ async function run() {
                 const result = await usersCollection.insertOne(user);
                 res.send(result)
             }
-            res.send('user already exist')
+            // res.send('user already exist')
 
         })
 
         app.post('/foods', async (req, res) => {
             const user = req.body;
             const servicer = req.body.addBy;
-            const query = { 'addBy.email': servicer.email }
+            const query = { email: servicer.email }
             const existingEmail = await serviceCollection.findOne(query);
             if (!existingEmail) {
                 const resultOne = await serviceCollection.insertOne(servicer);
-                res.send(resultOne);
+            //    return res.send(resultOne);
             }
             // console.log(user.addBy)
             const result = await foodsCollection.insertOne(user);
@@ -212,11 +211,11 @@ async function run() {
         app.post('/service', async (req, res) => {
             const user = req.body;
             const servicer = req.body.addBy;
-            const query = { 'addBy.email': servicer.email }
+            const query = { email: servicer.email }
             const existingEmail = await serviceCollection.findOne(query);
             if (!existingEmail) {
                 const resultOne = await serviceCollection.insertOne(servicer);
-                res.send(resultOne);
+                // res.send(resultOne);
             }
             res.send('servicer all ready exist')
             // console.log(user.addBy)
@@ -227,7 +226,6 @@ async function run() {
         app.post('/purchase', async (req, res) => {
             const purchaseData = req.body;
             const purchaseId = purchaseData.id;
-            // console.log(purchaseData, purchaseId);
             const result = await purchaseCollection.insertOne(purchaseData);
             const filter = { _id: new ObjectId(purchaseId) }
             const options = { upsert: true }
