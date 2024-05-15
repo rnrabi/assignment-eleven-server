@@ -9,7 +9,7 @@ const port = process.env.PORT || 5000;
 
 // middlewere
 app.use(cors({
-    origin: ['http://localhost:5173','https://assignment-eleven-51b91.web.app','https://assignment-eleven-51b91.firebaseapp.com'],
+    origin: ['http://localhost:5173', 'https://assignment-eleven-51b91.web.app', 'https://assignment-eleven-51b91.firebaseapp.com'],
     credentials: true,
     optionSuccessStatus: 200
 }))
@@ -60,6 +60,7 @@ async function run() {
         const foodsCollection = client.db('restaurant').collection('foods');
         const purchaseCollection = client.db('restaurant').collection('purchase');
         const serviceCollection = client.db('restaurant').collection('service');
+        const feedbackCollection = client.db('restaurant').collection('feedback');
 
         // create jwt token
         app.post('/jwt', async (req, res) => {
@@ -84,7 +85,7 @@ async function run() {
             //         maxAge: 0,
             //     })
             //     .send({ success: true })
-            res.clearCookie('token', {maxAge:0,sameSite:"none",secure:true}).send({success:true})
+            res.clearCookie('token', { maxAge: 0, sameSite: "none", secure: true }).send({ success: true })
         })
 
 
@@ -155,6 +156,13 @@ async function run() {
             const result = await foodsCollection.find().sort(sort).limit(6).toArray();
             res.send(result)
         })
+        
+
+        app.get('/feedback', async (req, res) => {
+            const result = await feedbackCollection.find().toArray();
+            res.send(result)
+        })
+
 
         app.put('/update/:id', async (req, res) => {
             const id = req.params.id;
@@ -200,7 +208,7 @@ async function run() {
             const existingEmail = await serviceCollection.findOne(query);
             if (!existingEmail) {
                 const resultOne = await serviceCollection.insertOne(servicer);
-            //    return res.send(resultOne);
+                //    return res.send(resultOne);
             }
             // console.log(user.addBy)
             const result = await foodsCollection.insertOne(user);
@@ -219,7 +227,7 @@ async function run() {
             }
             res.send('servicer all ready exist')
             // console.log(user.addBy)
-            
+
         })
 
 
@@ -233,6 +241,13 @@ async function run() {
                 $inc: { purchase: 1, quantity: -1 }
             }
             const updateFoodsCollection = await foodsCollection.updateOne(filter, doc, options)
+            res.send(result)
+
+        })
+
+        app.post('/feedback', async (req, res) => {
+            const feedbackInfo = req.body;
+            const result = await feedbackCollection.insertOne(feedbackInfo);
             res.send(result)
 
         })
